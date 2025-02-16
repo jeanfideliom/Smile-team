@@ -32,10 +32,8 @@ const HomeScreen = () => {
 
       <View style={globalStyles.container}>
         <Header />
-
-        
         <View style={styles.mainContent}>
-          
+
           <View style={styles.loginContainer}>
             <Text style={globalStyles.policyText}>Need to sign in?</Text>
             <TouchableOpacity 
