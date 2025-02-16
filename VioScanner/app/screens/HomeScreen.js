@@ -4,7 +4,8 @@ import {
   View, 
   Text, 
   TouchableOpacity, 
-  Modal 
+  Modal,
+  Linking
 } from "react-native";
 import Header from "../components/Header";
 import BottomNavigation from "../components/BottomNavigation";
@@ -12,6 +13,11 @@ import { globalStyles } from "../styles/styles";
 
 const HomeScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
+
+  const handleDownloadPolicy = () => {
+    const pdfUrl = "https://drive.google.com/file/d/1MryW3oVOTUak9h4ANFDy0haCA2JWWlZ0/view?usp=sharing"; // Replace with your PDF file URL
+    Linking.openURL(pdfUrl).catch(err => console.error("Failed to open URL:", err));
+  };
 
   return (
     <ImageBackground
@@ -30,7 +36,7 @@ const HomeScreen = () => {
           <Text style={globalStyles.policyText}>Read Our Policy Below:</Text>
           <TouchableOpacity 
             style={globalStyles.policyButton} 
-            onPress={() => setModalVisible(true)}
+            onPress={handleDownloadPolicy}
           >
             <Text style={globalStyles.policyButtonText}>View Policy</Text>
           </TouchableOpacity>

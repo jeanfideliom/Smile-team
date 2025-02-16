@@ -1,11 +1,7 @@
-import React from "react";
-import { View } from "react-native";
-import HomeScreen from "./screens/HomeScreen";
+import { registerRootComponent } from 'expo';
+import App from '../App.js';
 
-export default function Page() {
-  return (
-    <View style={{ flex: 1 }}>
-      <HomeScreen />
-    </View>
-  );
-}
+// registerRootComponent calls AppRegistry.registerComponent('main', () => App);
+// It also ensures that whether you load the app in Expo Go or in a native build,
+// the environment is set up appropriately
+registerRootComponent(App);
