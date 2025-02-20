@@ -1,13 +1,18 @@
 import React from "react";
 import { View, TouchableOpacity } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+
 
 const BottomNavigation = () => {
+  const navigation = useNavigation();
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
         <FontAwesome name="user" size={24} color="black" />
       </TouchableOpacity>
+
       <TouchableOpacity>
         <FontAwesome name="camera" size={24} color="black" />
       </TouchableOpacity>
