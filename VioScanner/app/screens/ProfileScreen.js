@@ -1,8 +1,11 @@
 import React from 'react';
 import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { globalStyles } from '../styles/styles';
+import { useNavigation } from '@react-navigation/native';
 
 const ProfileScreen = () => {
+  const navigation = useNavigation();
+
   return (
     <ScrollView style={globalStyles.profileContainer}>
       <View style={globalStyles.profileHeader}>
@@ -32,7 +35,10 @@ const ProfileScreen = () => {
         </View>
       </View>
 
-      <TouchableOpacity style={globalStyles.violationButton}>
+      <TouchableOpacity
+        style={globalStyles.violationButton}
+        onPress={() => navigation.navigate('Violation')}
+      >
         <Text style={globalStyles.violationButtonText}>View Violations Report</Text>
       </TouchableOpacity>
     </ScrollView>
