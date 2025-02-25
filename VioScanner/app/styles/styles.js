@@ -141,6 +141,57 @@ export const globalStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  logoutModalContainer: {
+    backgroundColor: "white",
+    padding: 20,
+    width: "45%",
+    minHeight: 180,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+
+
+
+  logoutModalTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  logoutButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "20%",
+    marginTop: 20,
+    gap: 10,
+  },
+
+
+
+  logoutButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    width: "45%",
+    alignItems: "center",
+  },
+  logoutConfirmButton: {
+    backgroundColor: "#ff4444",
+  },
+  logoutCancelButton: {
+    backgroundColor: "rgba(0, 122, 255, 0.9)",
+  },
+
+
+
+
+  logoutButtonText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });
 
 export const colors = {
