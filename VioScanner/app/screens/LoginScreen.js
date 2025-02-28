@@ -15,8 +15,8 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const LoginScreen = ({ navigation }) => {
   const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: '875733199883-qfa622msk2h44le0ljbecef42b7j9l7m.apps.googleusercontent.com', // Replace with your actual Web client ID
-    redirectUri: 'https://vioscanner-451201.supabase.co/auth/v1/callback', // Ensure this matches the authorized redirect URI
+    webClientId: '875733199883-qfa622msk2h44le0ljbecef42b7j9l7m.apps.googleusercontent.com', 
+    redirectUri: 'https://vioscanner-451201.supabase.co/auth/v1/callback', 
 
   });
 
@@ -64,7 +64,7 @@ const LoginScreen = ({ navigation }) => {
         style={styles.headerPhoto}
       />
       <Image
-        source={require("../../assets/images/logo.png")} // Replace with your logo path
+        source={require("../../assets/images/logo.png")} 
         style={styles.logo}
       />
       <View style={styles.formContainer}>
@@ -102,18 +102,18 @@ const styles = StyleSheet.create({
     height: 100,
     resizeMode: "contain",
     position: "absolute",
-    top: 300, // Adjust this value to position the logo at the mid-bottom of the header photo
+    top: 300,
     left: "50%",
     transform: [{ translateX: -50 }],
-    backgroundColor: "#fff", // Add white background color
-    padding: 10, // Add padding
-    borderRadius: 50, // Add border radius to make it circular
+    backgroundColor: "#fff", 
+    padding: 10, 
+    borderRadius: 50, 
   },
   formContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 250, // Adjust this value to position the form below the logo
+    marginTop: 250, 
   },
   title: {
     fontSize: 24,
