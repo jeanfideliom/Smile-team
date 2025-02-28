@@ -1,30 +1,60 @@
-import React, { useState } from "react";
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet,
-  Image
-} from "react-native";
+import React from "react";
+import {  View, Text,  TouchableOpacity,  StyleSheet,Image, Alert} from "react-native";
+import { createClient } from '@supabase/supabase-js';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import Constants from 'expo-constants';
+
+WebBrowser.maybeCompleteAuthSession();
+
+const supabaseUrl = 'https://izcvkzcuncdshfrqwcmu.supabase.co';
+
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6Y3ZremN1bmNkc2hmcnF3Y211Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3NDI0NTQsImV4cCI6MjA1NjMxODQ1NH0.mIIhSysocDdQuStUEV6uXzyh7Y-xzbnfWOm95uWlrnk';
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 const LoginScreen = ({ navigation }) => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    webClientId: '875733199883-qfa622msk2h44le0ljbecef42b7j9l7m.apps.googleusercontent.com', // Replace with your actual Web client ID
+    redirectUri: 'https://vioscanner-451201.supabase.co/auth/v1/callback', // Ensure this matches the authorized redirect URI
 
-  const handleLogin = () => {
-    // Add your login logic here
-    navigation.navigate("Home");
-  };
+  });
 
-  const handleSignUp = () => {
-    // Add your sign-up navigation logic here
-    console.log("Navigate to Sign Up screen");
-  };
+  React.useEffect(() => {
+    if (response?.type === 'success') {
+      const { authentication } = response;
+      handleLogin(authentication.accessToken);
+    }
+  }, [response]);
 
-  const handleForgotPassword = () => {
-    // Add your forgot password navigation logic here
-    console.log("Navigate to Forgot Password screen");
+  const handleLogin = async (accessToken) => {
+    console.log("handleLogin called");
+    try {
+      const { user, session, error } = await supabase.auth.signIn({
+        provider: 'google',
+        accessToken,
+      });
+
+      if (error) {
+        console.error("Login error:", error);
+        Alert.alert("Login error", error.message);
+        return;
+      }
+
+      if (user.email.endsWith('@neu.edu.ph')) {
+        console.log("Google Sign-In successful. User info:", user);
+        console.log("Navigating to Home screen...");
+        navigation.navigate("Home");
+        console.log("Successfully navigated to Home screen.");
+      } else {
+        console.error("Login failed: Unauthorized domain");
+        Alert.alert("Login failed", "Unauthorized domain. Please use your @neu.edu.ph email.");
+        await supabase.auth.signOut();
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      Alert.alert("Login error", error.message);
+    }
   };
 
   return (
@@ -40,27 +70,14 @@ const LoginScreen = ({ navigation }) => {
       <View style={styles.formContainer}>
         <Text style={styles.title}>VioScanner</Text>
         <Text style={styles.subtitle}>A Violation Detection App</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        <TouchableOpacity onPress={handleForgotPassword}>
-          <Text style={styles.linkText}>Forgot Password?</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleSignUp}>
-          <Text style={styles.linkText}>Don't have an Account? Sign Up</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={() => {
+            promptAsync();
+          }}
+          disabled={!request}
+        >
+          <Text style={styles.buttonText}>Continue using Google Sign In</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -104,21 +121,8 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   subtitle: {
-    fontSize: 16,
     color: "#666",
     marginBottom: 20,
-  },
-  input: {
-    width: "80%",
-    padding: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-  },
-  linkText: {
-    color: "#007BFF",
-    marginBottom: 10,
   },
   button: {
     width: "80%",
