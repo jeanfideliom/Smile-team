@@ -5,11 +5,23 @@ export const globalStyles = StyleSheet.create({
     flex: 1,
     justifyContent: "space-between",
   },
+  button: {
+    width: "80%",
+    padding: 15,
+    backgroundColor: "#007BFF",
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
   profileContainer: {
     flex: 1,
     padding: 20,
     backgroundColor: '#fff',
   },
+
   profileHeader: {
     alignItems: 'center',
     marginBottom: 30,
