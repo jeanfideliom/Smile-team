@@ -23,34 +23,43 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Calculate Velocity
+      - name: Store API Response
+        run: echo '${{ steps.fetch_issues.outputs.data }}' > issues.json
+
+      - name: Create Velocity Calculation Script
         run: |
-          echo '${{ steps.fetch_issues.outputs.data }}' > issues.json
-          python3 calculate_velocity.py
+          cat <<EOF > calculate_velocity.py
+          import json
+
+          try:
+              # Load issues JSON
+              with open("issues.json", "r") as f:
+                  data = f.read()
+                  if not data.strip():
+                      raise ValueError("API response is empty")
+                  issues = json.loads(data)
+
+              # Calculate velocity (sum of Story Points from labels)
+              velocity = sum(
+                  int(label['name'].split(':')[-1]) for issue in issues if 'labels' in issue 
+                  for label in issue['labels'] if label['name'].startswith("SP:")
+              )
+
+              print(f"🔥 Sprint Velocity: {velocity} Story Points")
+
+              with open("velocity.txt", "w") as f:
+                  f.write(f"Sprint Velocity: {velocity} Story Points\n")
+
+          except Exception as e:
+              print(f"❌ Error: {e}")
+              exit(1)
+          EOF
+
+      - name: Run Velocity Calculation
+        run: python3 calculate_velocity.py
 
       - name: Upload Velocity Report
         uses: actions/upload-artifact@v4
         with:
           name: velocity-report
           path: velocity.txt
-
-    # Separate step to write the Python script
-      - name: Create Velocity Calculation Script
-        run: |
-          cat <<EOF > calculate_velocity.py
-          import json
-
-          # Load issues JSON
-          with open("issues.json", "r") as f:
-              issues = json.load(f)
-
-          # Calculate velocity (sum of Story Points from labels)
-          velocity = sum(
-              int(label['name'].split(':')[-1]) for issue in issues if 'labels' in issue for label in issue['labels'] if label['name'].startswith("SP:")
-          )
-
-          print(f"🔥 Sprint Velocity: {velocity} Story Points")
-
-          with open("velocity.txt", "w") as f:
-              f.write(f"Sprint Velocity: {velocity} Story Points\n")
-          EOF
