@@ -1,0 +1,40 @@
+name: Sprint Velocity Calculation
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+  schedule:
+    - cron: "0 0 * * 7"  # Runs every Sunday at midnight
+
+jobs:
+  calculate-velocity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Fetch Completed Issues
+        uses: octokit/request-action@v2.x
+        id: fetch_issues
+        with:
+          route: GET /repos/{owner}/{repo}/issues?state=closed&labels=SP:*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calculate Velocity
+        run: |
+          import json
+          import os
+
+          issues = json.loads(os.environ['ISSUES'])
+          velocity = sum(int(issue['labels'][0]['name'].split(':')[-1]) for issue in issues)
+
+          print(f"🔥 Sprint Velocity: {velocity} Story Points")
+
+          with open("velocity.txt", "w") as f:
+              f.write(f"Sprint Velocity: {velocity} Story Points\n")
+
+      - name: Upload Velocity Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: velocity-report
+          path: velocity.txt
