@@ -25,9 +25,7 @@ jobs:
                   nodes {
                     title
                     number
-                    body
-                    closedAt
-                    projectItems(first: 1) {
+                    projectItems(first: 5) {
                       nodes {
                         fieldValues(first: 10) {
                           nodes {
@@ -66,7 +64,10 @@ jobs:
               with open("response.json", "r") as f:
                   data = json.load(f)
 
-              issues = data["data"]["repository"]["issues"]["nodes"]
+              # Check if response contains issues
+              issues = data.get("data", {}).get("repository", {}).get("issues", {}).get("nodes", [])
+              if not issues:
+                  raise ValueError("No closed issues found or API response invalid")
 
               # Debug output
               print("Fetched Issues:", json.dumps(issues, indent=2))
