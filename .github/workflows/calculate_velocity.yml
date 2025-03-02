@@ -25,11 +25,24 @@ jobs:
 
       - name: Calculate Velocity
         run: |
-          import json
-          import os
+          echo '${{ steps.fetch_issues.outputs.data }}' > issues.json
+          python3 calculate_velocity.py
 
-          # Fetch JSON response from previous step
-          issues = json.loads('${{ steps.fetch_issues.outputs.data }}')
+      - name: Upload Velocity Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: velocity-report
+          path: velocity.txt
+
+    # Separate step to write the Python script
+      - name: Create Velocity Calculation Script
+        run: |
+          cat <<EOF > calculate_velocity.py
+          import json
+
+          # Load issues JSON
+          with open("issues.json", "r") as f:
+              issues = json.load(f)
 
           # Calculate velocity (sum of Story Points from labels)
           velocity = sum(
@@ -40,9 +53,4 @@ jobs:
 
           with open("velocity.txt", "w") as f:
               f.write(f"Sprint Velocity: {velocity} Story Points\n")
-
-      - name: Upload Velocity Report
-        uses: actions/upload-artifact@v4
-        with:
-          name: velocity-report
-          path: velocity.txt
+          EOF
