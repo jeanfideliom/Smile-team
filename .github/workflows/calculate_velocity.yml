@@ -3,20 +3,23 @@ name: Sprint Velocity Calculation
 on:
   workflow_dispatch:  # Allows manual execution
   schedule:
-    - cron: "0 0 * * 0"  # Runs every Sunday at midnight (0 = Sunday)
+    - cron: "0 0 * * 0"  # Runs every Sunday at midnight
+
+permissions:
+  issues: read  # Ensure API can read issues
 
 jobs:
   calculate-velocity:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4  # Use latest version
+        uses: actions/checkout@v4
 
       - name: Fetch Completed Issues
         id: fetch_issues
         uses: octokit/request-action@v2.x
         with:
-          route: GET /repos/{owner}/{repo}/issues?state=closed
+          route: GET /repos/${{ github.repository }}/issues?state=closed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -25,9 +28,12 @@ jobs:
           import json
           import os
 
-          issues = json.loads(os.environ['ISSUES'])
+          # Fetch JSON response from previous step
+          issues = json.loads('${{ steps.fetch_issues.outputs.data }}')
+
+          # Calculate velocity (sum of Story Points from labels)
           velocity = sum(
-              int(issue['labels'][0]['name'].split(':')[-1]) for issue in issues if issue['labels']
+              int(label['name'].split(':')[-1]) for issue in issues if 'labels' in issue for label in issue['labels'] if label['name'].startswith("SP:")
           )
 
           print(f"🔥 Sprint Velocity: {velocity} Story Points")
@@ -36,7 +42,7 @@ jobs:
               f.write(f"Sprint Velocity: {velocity} Story Points\n")
 
       - name: Upload Velocity Report
-        uses: actions/upload-artifact@v4  # Updated to v4
+        uses: actions/upload-artifact@v4
         with:
           name: velocity-report
           path: velocity.txt
