@@ -3,14 +3,14 @@ name: Sprint Velocity Calculation
 on:
   workflow_dispatch:  # Allows manual execution
   schedule:
-    - cron: "0 0 * * 0"  # Runs every Sunday at midnight (GitHub uses 0 for Sunday)
+    - cron: "0 0 * * 0"  # Runs every Sunday at midnight (0 = Sunday)
 
 jobs:
   calculate-velocity:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # Use latest version
 
       - name: Fetch Completed Issues
         id: fetch_issues
@@ -36,7 +36,7 @@ jobs:
               f.write(f"Sprint Velocity: {velocity} Story Points\n")
 
       - name: Upload Velocity Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # Updated to v4
         with:
           name: velocity-report
           path: velocity.txt
