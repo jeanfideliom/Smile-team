@@ -36,6 +36,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    },
+    "authSession": {
+      "redirectUri": "https://auth.expo.io/@jeanfideliom/VioScanner"
     }
   }
 }
