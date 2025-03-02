@@ -16,7 +16,7 @@ jobs:
         id: fetch_issues
         uses: octokit/request-action@v2.x
         with:
-          route: GET /repos/{owner}/{repo}/issues?state=closed
+          route: GET /repos/{jeanfideliom}/{Smile-team}/issues?state=closed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
