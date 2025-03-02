@@ -3,7 +3,7 @@ name: Sprint Velocity Calculation
 on:
   workflow_dispatch:  # Allows manual execution
   schedule:
-    - cron: "0 0 * * SUN"  # Runs every Sunday at midnight
+    - cron: "0 0 * * 0"  # Runs every Sunday at midnight (GitHub uses 0 for Sunday)
 
 jobs:
   calculate-velocity:
@@ -16,7 +16,7 @@ jobs:
         id: fetch_issues
         uses: octokit/request-action@v2.x
         with:
-          route: GET /repos/{jeanfideliom}/{Smile-team}/issues?state=closed
+          route: GET /repos/{owner}/{repo}/issues?state=closed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
