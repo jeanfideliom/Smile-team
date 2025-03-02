@@ -1,38 +1,52 @@
-import React from "react";
-import {  View, Text,  TouchableOpacity,  StyleSheet,Image, Alert} from "react-native";
-import { createClient } from '@supabase/supabase-js';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import Constants from 'expo-constants';
+import React, { useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from "react-native";
+import { createClient } from "@supabase/supabase-js";
+import * as WebBrowser from "expo-web-browser";
+import * as AuthSession from "expo-auth-session";
+import Constants from "expo-constants";
 
 WebBrowser.maybeCompleteAuthSession();
 
-const supabaseUrl = 'https://izcvkzcuncdshfrqwcmu.supabase.co';
-
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6Y3ZremN1bmNkc2hmcnF3Y211Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA3NDI0NTQsImV4cCI6MjA1NjMxODQ1NH0.mIIhSysocDdQuStUEV6uXzyh7Y-xzbnfWOm95uWlrnk';
-
+// 🔹 Supabase Credentials
+const supabaseUrl = "https://vdobfuaenmtkzfqjrpgy.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkb2JmdWFlbm10a3pmcWpycGd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDA4OTU3MzAsImV4cCI6MjA1NjQ3MTczMH0.3FBB9F3RWSy2LiR0I5n3dwRccOVVZjW2vdD8osSr1kU"; // 🚨 Never expose this in production!
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// 🔹 Get Correct Redirect URI for Different Platforms
+const redirectUri = AuthSession.makeRedirectUri({
+  useProxy: true, // ✅ Recommended for Expo Go
+  native: "yourapp://redirect", // ✅ Used in standalone builds
+  useWeb: "http://localhost:8081", // ✅ Used for Web (Only if running on localhost)
+});
+
 const LoginScreen = ({ navigation }) => {
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    webClientId: '875733199883-qfa622msk2h44le0ljbecef42b7j9l7m.apps.googleusercontent.com', 
-    redirectUri: 'https://vioscanner-451201.supabase.co/auth/v1/callback', 
+  // 🔹 Google OAuth Request
+  const [request, response, promptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: "1089667306742-imtutpgd9dnu9c7qn4ocmr0kjmtjru0n.apps.googleusercontent.com", // Google Web Client ID
+      redirectUri, // ✅ Use the correct redirect URI
+      responseType: "id_token",
+      scopes: ["openid", "profile", "email"], // ✅ Required OAuth scopes
+      usePKCE: false, // ✅ Disable PKCE to prevent errors
+    },
+    { authorizationEndpoint: "https://accounts.google.com/o/oauth2/auth" }
+  );
 
-  });
-
-  React.useEffect(() => {
-    if (response?.type === 'success') {
-      const { authentication } = response;
-      handleLogin(authentication.accessToken);
+  // 🔹 Handle OAuth Response
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { id_token } = response.params;
+      handleLogin(id_token);
     }
   }, [response]);
 
-  const handleLogin = async (accessToken) => {
+  // 🔹 Login to Supabase with Google ID Token
+  const handleLogin = async (idToken) => {
     console.log("handleLogin called");
     try {
-      const { user, session, error } = await supabase.auth.signIn({
-        provider: 'google',
-        accessToken,
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: idToken,
       });
 
       if (error) {
@@ -41,11 +55,9 @@ const LoginScreen = ({ navigation }) => {
         return;
       }
 
-      if (user.email.endsWith('@neu.edu.ph')) {
-        console.log("Google Sign-In successful. User info:", user);
-        console.log("Navigating to Home screen...");
+      if (data?.user?.email?.endsWith("@neu.edu.ph")) {
+        console.log("Google Sign-In successful. User info:", data.user);
         navigation.navigate("Home");
-        console.log("Successfully navigated to Home screen.");
       } else {
         console.error("Login failed: Unauthorized domain");
         Alert.alert("Login failed", "Unauthorized domain. Please use your @neu.edu.ph email.");
@@ -59,24 +71,12 @@ const LoginScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require("../../assets/images/headerPhoto.png")} 
-        style={styles.headerPhoto}
-      />
-      <Image
-        source={require("../../assets/images/logo.png")} 
-        style={styles.logo}
-      />
+      <Image source={require("../../assets/images/headerPhoto.png")} style={styles.headerPhoto} />
+      <Image source={require("../../assets/images/logo.png")} style={styles.logo} />
       <View style={styles.formContainer}>
         <Text style={styles.title}>VioScanner</Text>
         <Text style={styles.subtitle}>A Violation Detection App</Text>
-        <TouchableOpacity 
-          style={styles.button} 
-          onPress={() => {
-            promptAsync();
-          }}
-          disabled={!request}
-        >
+        <TouchableOpacity style={styles.button} onPress={() => promptAsync()} disabled={!request}>
           <Text style={styles.buttonText}>Continue using Google Sign In</Text>
         </TouchableOpacity>
       </View>
@@ -84,6 +84,7 @@ const LoginScreen = ({ navigation }) => {
   );
 };
 
+// 🔹 Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -105,15 +106,15 @@ const styles = StyleSheet.create({
     top: 300,
     left: "50%",
     transform: [{ translateX: -50 }],
-    backgroundColor: "#fff", 
-    padding: 10, 
-    borderRadius: 50, 
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 50,
   },
   formContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 250, 
+    marginTop: 250,
   },
   title: {
     fontSize: 24,
