@@ -6,7 +6,7 @@ on:
     - cron: "0 0 * * 0"  # Runs every Sunday at midnight
 
 permissions:
-  issues: read  # Ensure API can read issues
+  issues: read
 
 jobs:
   calculate-velocity:
@@ -15,38 +15,77 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Fetch Completed Issues
+      - name: Fetch Issues with Story Points
         id: fetch_issues
-        uses: octokit/request-action@v2.x
-        with:
-          route: GET /repos/${{ github.repository }}/issues?state=closed
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo '{
+            "query": "query {
+              repository(owner: \"${{ github.repository_owner }}\", name: \"${{ github.event.repository.name }}\") {
+                issues(first: 100, states: CLOSED) {
+                  nodes {
+                    title
+                    number
+                    body
+                    closedAt
+                    projectItems(first: 1) {
+                      nodes {
+                        fieldValues(first: 10) {
+                          nodes {
+                            field {
+                              ... on ProjectV2FieldCommon {
+                                name
+                              }
+                            }
+                            value
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }"
+          }' > query.json
 
-      - name: Store API Response
-        run: echo '${{ steps.fetch_issues.outputs.data }}' > issues.json
+          # Run GraphQL query
+          curl -X POST -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               -H "Content-Type: application/json" \
+               -d @query.json \
+               https://api.github.com/graphql > response.json
 
-      - name: Create Velocity Calculation Script
+      - name: Debug API Response
+        run: cat response.json || echo "response.json is empty"
+
+      - name: Process Story Points
         run: |
           cat <<EOF > calculate_velocity.py
           import json
 
           try:
-              # Load issues JSON
-              with open("issues.json", "r") as f:
-                  data = f.read()
-                  if not data.strip():
-                      raise ValueError("API response is empty")
-                  issues = json.loads(data)
+              # Load response data
+              with open("response.json", "r") as f:
+                  data = json.load(f)
 
-              # Calculate velocity (sum of Story Points from labels)
-              velocity = sum(
-                  int(label['name'].split(':')[-1]) for issue in issues if 'labels' in issue 
-                  for label in issue['labels'] if label['name'].startswith("SP:")
-              )
+              issues = data["data"]["repository"]["issues"]["nodes"]
+
+              # Debug output
+              print("Fetched Issues:", json.dumps(issues, indent=2))
+
+              # Extract Story Points from custom fields
+              velocity = 0
+              for issue in issues:
+                  for projectItem in issue.get("projectItems", {}).get("nodes", []):
+                      for field in projectItem.get("fieldValues", {}).get("nodes", []):
+                          if field.get("field", {}).get("name") == "Story Points":
+                              try:
+                                  points = int(field["value"])
+                                  velocity += points
+                              except (ValueError, TypeError):
+                                  print(f"⚠️ Skipping invalid Story Points value: {field['value']}")
 
               print(f"🔥 Sprint Velocity: {velocity} Story Points")
 
+              # Save result
               with open("velocity.txt", "w") as f:
                   f.write(f"Sprint Velocity: {velocity} Story Points\n")
 
